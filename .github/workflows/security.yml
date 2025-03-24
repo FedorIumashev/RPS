@@ -14,10 +14,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/setup-python@v5
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/checkout@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: 'pip'  # Кешируем пакеты Python
@@ -27,21 +27,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install bandit pip-audit
   
-          # Добавляем репозиторий Aqua Security
-          sudo apt-get install -y wget gnupg
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo "deb https://aquasecurity.github.io/trivy-repo/deb stable main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update
-          sudo apt-get install -y trivy
+          # Устанавливаем Trivy вручную (так как apt-репозиторий не поддерживает Ubuntu 24.04)
+          wget -qO trivy.tar.gz https://github.com/aquasecurity/trivy/releases/latest/download/trivy_Linux-64bit.tar.gz
+          tar -xzf trivy.tar.gz
+          sudo mv trivy /usr/local/bin/
   
-          # Устанавливаем Gitleaks
+          # Устанавливаем Gitleaks вручную
           curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
           chmod +x gitleaks && sudo mv gitleaks /usr/local/bin/
-  
 
       - name: Run Bandit (SAST)
         run: bandit -r src/
-        continue-on-error: true  # Если нужно продолжать выполнение при ошибках
+        continue-on-error: true  # Не прерываем выполнение при ошибках
 
       - name: Run Pip Audit (Dependency Scan)
         run: pip-audit
