@@ -33,26 +33,28 @@ jobs:
           sudo mv ./bin/trivy /usr/local/bin/
           trivy --version  # Проверяем установку
 
-      - name: Install Gitleaks
-        run: |
-          wget -q https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -O gitleaks
-          file gitleaks  # Проверяем, что это бинарный файл
-          chmod +x gitleaks
-          sudo mv gitleaks /usr/local/bin/gitleaks
-          /usr/local/bin/gitleaks version  # Проверяем версию
-
+          - name: Install Gitleaks
+          run: |
+            wget -q https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -O gitleaks
+            chmod +x gitleaks
+            sudo mv gitleaks /usr/local/bin/gitleaks
+            ls -lah /usr/local/bin/gitleaks  # Проверяем, что файл существует
+            /usr/local/bin/gitleaks version  # Проверяем версию
+          shell: bash
+          continue-on-error: false  # Прерываем выполнение при ошибке
+  
       - name: Run Bandit (SAST)
         run: bandit -r src/
         continue-on-error: true  # Не прерываем выполнение при ошибках
-
+  
       - name: Run Pip Audit (Dependency Scan)
         run: pip-audit
         continue-on-error: true
-
+  
       - name: Run Trivy on dependencies
         run: trivy fs --scanners vuln,config .
         continue-on-error: true
-
+  
       - name: Run Gitleaks (Secrets Scan)
         run: gitleaks detect -v
         continue-on-error: true
