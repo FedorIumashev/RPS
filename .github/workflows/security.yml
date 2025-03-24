@@ -27,14 +27,14 @@ jobs:
           python -m pip install --upgrade pip setuptools
           pip install --no-cache-dir bandit pip-audit
 
-      - name: Install security tools
+      - name: Install Trivy
         run: |
-          # Устанавливаем Trivy
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-          sudo mv trivy /usr/local/bin/
+          sudo mv ./bin/trivy /usr/local/bin/
           trivy --version  # Проверяем установку
 
-          # Устанавливаем Gitleaks
+      - name: Install Gitleaks
+        run: |
           curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
           chmod +x gitleaks && sudo mv gitleaks /usr/local/bin/
           gitleaks version  # Проверяем установку
