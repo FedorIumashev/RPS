@@ -29,4 +29,5 @@ jobs:
 
       - name: Run tests
         run: |
+          source venv/bin/activate  # Активируем окружение
           pytest tests/
