@@ -26,11 +26,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install bandit pip-audit
-
-          # Устанавливаем Trivy и Gitleaks через package manager
-          sudo apt-get update && sudo apt-get install -y trivy
+  
+          # Добавляем репозиторий Aqua Security
+          sudo apt-get install -y wget gnupg
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb stable main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+  
+          # Устанавливаем Gitleaks
           curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
           chmod +x gitleaks && sudo mv gitleaks /usr/local/bin/
+  
 
       - name: Run Bandit (SAST)
         run: bandit -r src/
