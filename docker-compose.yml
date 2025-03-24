@@ -1,6 +1,7 @@
 version: "3.8"
 
 services:
+
   postgres:
     image: postgres:15
     container_name: postgres
@@ -15,6 +16,21 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - monitoring
+    app:
+    build:
+      context: .  # Путь к вашему проекту
+    container_name: devsecops-app
+    environment:
+      - ENV=production  # Добавить переменные окружения, если нужно
+    ports:
+      - "5000:5000"  # Прокси порта приложения
+    volumes:
+      - .:/app  # Монтируем код
+    networks:
+      - monitoring
+    depends_on:
+      - postgres  # Зависит от базы данных PostgreSQL
+      - sonarqube  # Зависит от SonarQube
 
   sonarqube:
     image: sonarqube:lts
