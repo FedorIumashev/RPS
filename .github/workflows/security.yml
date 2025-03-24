@@ -22,16 +22,18 @@ jobs:
           python-version: '3.12'
           cache: 'pip'  # Кешируем пакеты Python
 
+      - name: Upgrade pip and install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools
+          pip install --no-cache-dir bandit pip-audit
+
       - name: Install security tools
         run: |
-          python -m pip install --upgrade pip
-          pip install bandit pip-audit
-  
-          # Устанавливаем Trivy вручную (так как apt-репозиторий не поддерживает Ubuntu 24.04)
-          wget -qO trivy.tar.gz https://github.com/aquasecurity/trivy/releases/latest/download/trivy_Linux-64bit.tar.gz
+          # Устанавливаем Trivy вручную (APT не поддерживает Ubuntu 24.04)
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
           tar -xzf trivy.tar.gz
           sudo mv trivy /usr/local/bin/
-  
+
           # Устанавливаем Gitleaks вручную
           curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
           chmod +x gitleaks && sudo mv gitleaks /usr/local/bin/
