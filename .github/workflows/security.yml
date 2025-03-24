@@ -27,6 +27,12 @@ jobs:
           python -m pip install --upgrade pip setuptools
           pip install --no-cache-dir bandit pip-audit
 
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+          sudo mv ./bin/trivy /usr/local/bin/
+          trivy --version  # Проверяем установку
+
       - name: Install Gitleaks
         run: |
           wget -q https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -O gitleaks
@@ -41,6 +47,10 @@ jobs:
 
       - name: Run Pip Audit (Dependency Scan)
         run: pip-audit
+        continue-on-error: true
+
+      - name: Run Trivy on dependencies
+        run: trivy fs --scanners vuln,config .
         continue-on-error: true
 
       - name: Run Gitleaks (Secrets Scan)
