@@ -35,9 +35,11 @@ jobs:
 
       - name: Install Gitleaks
         run: |
-          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
-          chmod +x gitleaks && sudo mv gitleaks /usr/local/bin/
-          gitleaks version  # Проверяем установку
+          wget -q https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -O gitleaks
+          file gitleaks  # Проверяем, что это бинарный файл
+          chmod +x gitleaks
+          sudo mv gitleaks /usr/local/bin/gitleaks
+          /usr/local/bin/gitleaks version  # Проверяем версию
 
       - name: Run Bandit (SAST)
         run: bandit -r src/
