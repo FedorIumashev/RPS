@@ -30,39 +30,37 @@ jobs:
       - name: Upgrade pip and install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
-          pip install --no-cache-dir bandit pip-audit
-
-      - name: Install Trivy
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-          sudo mv ./bin/trivy /usr/local/bin/
-          trivy --version
+          pip install --no-cache-dir bandit pip-audit trivy
 
       - name: Run Bandit (SAST)
         run: |
-          bandit -r src/ -f json -o bandit-report.json || true
+          bandit -r src/ -f sarif -o bandit-report.sarif || true
 
       - name: Run Pip Audit (Dependency Scan)
         run: |
-          pip-audit --format=json --output=pip-audit-report.json || true
+          pip-audit --format=sarif --output=pip-audit-report.sarif || true
 
       - name: Run Trivy on dependencies
         run: |
-          trivy fs --scanners vuln,config -f json -o trivy-report.json . || true
+          trivy fs --scanners vuln,config -f sarif -o trivy-report.sarif . || true
 
       - name: Run Gitleaks (Secrets Scan) via Docker
         run: |
-          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=json --report-path=/src/gitleaks-report.json || true
+          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=sarif --report-path=/src/gitleaks-report.sarif || true
+
+      - name: List generated files
+        run: |
+          ls -lah
 
       - name: Upload reports as artifacts
         uses: actions/upload-artifact@v4
         with:
           name: security-reports
           path: |
-            bandit-report.json
-            pip-audit-report.json
-            trivy-report.json
-            gitleaks-report.json
+            bandit-report.sarif
+            pip-audit-report.sarif
+            trivy-report.sarif
+            gitleaks-report.sarif
 
       - name: Upload Bandit report to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v3
