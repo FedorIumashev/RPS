@@ -42,25 +42,25 @@ jobs:
           sudo mv ./bin/trivy /usr/local/bin/
           trivy --version  # Проверим установку
 
-      # Шаг 5: Запуск Bandit для анализа кода (SAST)
+      # Шаг 5: Запуск Bandit для анализа кода (SAST) с форматом SARIF
       - name: Run Bandit (SAST)
         run: |
-          bandit -r src/ -f json -o bandit-report.json || true
+          bandit -r src/ -f sarif -o bandit-report.sarif || true
 
       # Шаг 6: Запуск Pip Audit для проверки зависимостей
       - name: Run Pip Audit (Dependency Scan)
         run: |
-          pip-audit --format=json --output=pip-audit-report.json || true
+          pip-audit --format=sarif --output=pip-audit-report.sarif || true
 
       # Шаг 7: Запуск Trivy для проверки уязвимостей
       - name: Run Trivy on dependencies
         run: |
-          trivy fs --scanners vuln,config -f json -o trivy-report.json . || true
+          trivy fs --scanners vuln,config -f sarif -o trivy-report.sarif . || true
 
       # Шаг 8: Запуск Gitleaks для поиска секретных ключей
       - name: Run Gitleaks (Secrets Scan) via Docker
         run: |
-          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=json --report-path=/src/gitleaks-report.json || true
+          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=sarif --report-path=/src/gitleaks-report.sarif || true
 
       # Шаг 9: Проверка существования отчетов (для отладки)
       - name: List generated files
@@ -73,28 +73,28 @@ jobs:
         with:
           name: security-reports
           path: |
-            bandit-report.json
-            pip-audit-report.json
-            trivy-report.json
-            gitleaks-report.json
+            bandit-report.sarif
+            pip-audit-report.sarif
+            trivy-report.sarif
+            gitleaks-report.sarif
 
       # Шаг 11: Загружаем отчеты в GitHub Security Tab (SARIF формат)
       - name: Upload Bandit report to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: bandit-report.json
+          sarif_file: bandit-report.sarif
 
       - name: Upload Pip Audit report to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: pip-audit-report.json
+          sarif_file: pip-audit-report.sarif
 
       - name: Upload Trivy report to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: trivy-report.json
+          sarif_file: trivy-report.sarif
 
       - name: Upload Gitleaks report to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: gitleaks-report.json
+          sarif_file: gitleaks-report.sarif
