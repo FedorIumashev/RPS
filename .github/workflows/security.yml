@@ -30,54 +30,50 @@ jobs:
       - name: Upgrade pip and install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
-          pip install --no-cache-dir bandit pip-audit
-
-      - name: Install Trivy
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-          sudo mv ./bin/trivy /usr/local/bin/
-          trivy --version
+          pip install --no-cache-dir bandit pip-audit trivy
 
       - name: Run Bandit (SAST)
         run: |
-          bandit -r src/ -f sarif -o $(pwd)/bandit-report.sarif || echo "Bandit failed"
-          ls -lah $(pwd)
+          bandit -r src/ -f json -o bandit-report.json || true
 
       - name: Run Pip Audit (Dependency Scan)
         run: |
-          pip-audit --format=sarif --output=$(pwd)/pip-audit-report.sarif || echo "Pip Audit failed"
-          ls -lah $(pwd)
+          pip-audit --format=json --output=pip-audit-report.json || true
 
       - name: Run Trivy on dependencies
         run: |
-          trivy fs --scanners vuln,config -f sarif -o $(pwd)/trivy-report.sarif . || echo "Trivy failed"
-          ls -lah $(pwd)
+          trivy fs --scanners vuln,config -f json -o trivy-report.json . || true
 
       - name: Run Gitleaks (Secrets Scan) via Docker
         run: |
-          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=sarif --report-path=/src/gitleaks-report.sarif || echo "Gitleaks failed"
-          ls -lah $(pwd)
-
-      - name: Verify that reports exist
-        run: |
-          ls -lah $(pwd)
-          test -f bandit-report.sarif && echo "Bandit report exists" || echo "Bandit report MISSING"
-          test -f pip-audit-report.sarif && echo "Pip Audit report exists" || echo "Pip Audit report MISSING"
-          test -f trivy-report.sarif && echo "Trivy report exists" || echo "Trivy report MISSING"
-          test -f gitleaks-report.sarif && echo "Gitleaks report exists" || echo "Gitleaks report MISSING"
+          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=json --report-path=/src/gitleaks-report.json || true
 
       - name: Upload reports as artifacts
         uses: actions/upload-artifact@v4
         with:
           name: security-reports
           path: |
-            bandit-report.sarif
-            pip-audit-report.sarif
-            trivy-report.sarif
-            gitleaks-report.sarif
+            bandit-report.json
+            pip-audit-report.json
+            trivy-report.json
+            gitleaks-report.json
 
-      - name: Upload SARIF reports to GitHub Security Tab
-        if: success() || failure()
+      - name: Upload Bandit report to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: band_
+          sarif_file: bandit-report.sarif
+
+      - name: Upload Pip Audit report to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: pip-audit-report.sarif
+
+      - name: Upload Trivy report to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-report.sarif
+
+      - name: Upload Gitleaks report to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks-report.sarif
