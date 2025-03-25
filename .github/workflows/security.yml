@@ -45,3 +45,8 @@ jobs:
         run: |
           trivy fs --scanners vuln,config .
 
+      - name: Run Gitleaks (Secrets Scan) через Docker
+        run: |
+          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v || true
+
+
