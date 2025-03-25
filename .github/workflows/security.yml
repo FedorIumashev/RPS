@@ -20,53 +20,59 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Шаг 1: Получаем репозиторий
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Шаг 2: Устанавливаем Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: 'pip'
 
+      # Шаг 3: Устанавливаем зависимости
       - name: Upgrade pip and install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
           pip install --no-cache-dir bandit pip-audit
 
-      # Установка Trivy
-      - name: Install Trivy
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-          sudo mv ./bin/trivy /usr/local/bin/
-          trivy --version
-
-      # Run Bandit (SAST)
+      # Шаг 4: Генерация отчета Bandit
       - name: Run Bandit (SAST)
         run: |
           bandit -r src/ -f sarif -o reports/bandit-report.sarif || true
 
-      # Run Pip Audit (Dependency Scan)
+      # Шаг 5: Проверка наличия отчета Bandit
+      - name: Check if Bandit report exists
+        run: |
+          if [ ! -f reports/bandit-report.sarif ]; then
+            echo "Bandit report not found!"
+            exit 1
+          else
+            echo "Bandit report found."
+          fi
+
+      # Шаг 6: Запуск Pip Audit
       - name: Run Pip Audit (Dependency Scan)
         run: |
           pip-audit --format=sarif --output=reports/pip-audit-report.sarif || true
 
-      # Run Trivy (Vulnerability Scan)
+      # Шаг 7: Запуск Trivy (если нужно)
       - name: Run Trivy on dependencies
         run: |
           trivy fs --scanners vuln,config -f sarif -o reports/trivy-report.sarif . || true
 
-      # Run Gitleaks (Secrets Scan) via Docker
+      # Шаг 8: Запуск Gitleaks (поиск секретных ключей)
       - name: Run Gitleaks (Secrets Scan) via Docker
         run: |
           docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=sarif --report-path=/src/reports/gitleaks-report.sarif || true
 
-      # List generated files (for debugging)
+      # Шаг 9: Проверка всех сгенерированных файлов
       - name: List generated files
         run: |
           ls -lah reports/
 
-      # Upload reports as artifacts
+      # Шаг 10: Загружаем отчеты как артефакты
       - name: Upload reports as artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -77,25 +83,22 @@ jobs:
             reports/trivy-report.sarif
             reports/gitleaks-report.sarif
 
-      # Upload Bandit report to GitHub Security Tab
+      # Шаг 11: Загружаем отчеты в GitHub Security Tab
       - name: Upload Bandit report to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: reports/bandit-report.sarif
 
-      # Upload Pip Audit report to GitHub Security Tab
       - name: Upload Pip Audit report to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: reports/pip-audit-report.sarif
 
-      # Upload Trivy report to GitHub Security Tab
       - name: Upload Trivy report to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: reports/trivy-report.sarif
 
-      # Upload Gitleaks report to GitHub Security Tab
       - name: Upload Gitleaks report to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v3
         with:
