@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - main
-      
+
 permissions:
   security-events: write
   contents: read
@@ -30,7 +30,13 @@ jobs:
       - name: Upgrade pip and install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
-          pip install --no-cache-dir bandit pip-audit trivy
+          pip install --no-cache-dir bandit pip-audit
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+          sudo mv ./bin/trivy /usr/local/bin/
+          trivy --version
 
       - name: Run Bandit (SAST)
         run: |
