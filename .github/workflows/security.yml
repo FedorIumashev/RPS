@@ -35,7 +35,11 @@ jobs:
 
       - name: Install Gitleaks
         run: |
-          wget -q https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -O gitleaks
+          wget --retry-connrefused --waitretry=5 --timeout=30 -t 3 -q https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -O gitleaks
+          if [ ! -f gitleaks ]; then
+            echo "Failed to download Gitleaks binary" >&2
+            exit 1
+          fi
           chmod +x gitleaks
           sudo mv gitleaks /usr/local/bin/gitleaks
           gitleaks version
