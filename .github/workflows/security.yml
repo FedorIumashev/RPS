@@ -30,39 +30,23 @@ jobs:
       - name: Upgrade pip and install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
-          pip install --no-cache-dir bandit pip-audit
+          pip install --no-cache-dir bandit pip-audit trivy
 
-      - name: Install Trivy
+      - name: Run Bandit (SAST)
         run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-          sudo mv ./bin/trivy /usr/local/bin/
-          trivy --version
+          bandit -r src/ -f sarif -o bandit-report.sarif || true
 
-      - name: Install SARIF Formatter
+      - name: Run Pip Audit (Dependency Scan)
         run: |
-          curl -sSL https://github.com/advanced-security/sarif-fmt/releases/latest/download/sarif-fmt-linux-amd64 -o sarif-fmt
-          chmod +x sarif-fmt
-          sudo mv sarif-fmt /usr/local/bin/
+          pip-audit --format=sarif --output=pip-audit-report.sarif || true
 
-      - name: Run Bandit (SAST) and convert to SARIF
+      - name: Run Trivy on dependencies
         run: |
-          bandit -r src/ -f json -o bandit-report.json || true
-          sarif-fmt convert bandit bandit-report.json -o bandit-report.sarif
+          trivy fs --scanners vuln,config -f sarif -o trivy-report.sarif .
 
-      - name: Run Pip Audit (Dependency Scan) and convert to SARIF
+      - name: Run Gitleaks (Secrets Scan) via Docker
         run: |
-          pip-audit --format=json > pip-audit-report.json || true
-          sarif-fmt convert pip-audit pip-audit-report.json -o pip-audit-report.sarif
-
-      - name: Run Trivy on dependencies and convert to SARIF
-        run: |
-          trivy fs --scanners vuln,config -f json -o trivy-report.json .
-          sarif-fmt convert trivy trivy-report.json -o trivy-report.sarif
-
-      - name: Run Gitleaks (Secrets Scan) via Docker and convert to SARIF
-        run: |
-          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=json --report-path=/src/gitleaks-report.json || true
-          sarif-fmt convert gitleaks gitleaks-report.json -o gitleaks-report.sarif
+          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=sarif --report-path=/src/gitleaks-report.sarif || true
 
       - name: Upload reports as artifacts
         uses: actions/upload-artifact@v4
