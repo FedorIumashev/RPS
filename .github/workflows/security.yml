@@ -7,6 +7,11 @@ on:
   pull_request:
     branches:
       - main
+      
+permissions:
+  security-events: write
+  contents: read
+  pull-requests: read
 
 jobs:
   security_scan:
@@ -33,20 +38,38 @@ jobs:
           sudo mv ./bin/trivy /usr/local/bin/
           trivy --version
 
-      - name: Run Bandit (SAST)
+      - name: Run Bandit (SAST) and save report
         run: |
-          bandit -r src/ || true  # Ensure Bandit runs without failing the workflow
+          bandit -r src/ -f json -o bandit-report.json || true
 
-      - name: Run Pip Audit (Dependency Scan)
+      - name: Run Pip Audit (Dependency Scan) and save report
         run: |
-          pip-audit || true
+          pip-audit --format=json > pip-audit-report.json || true
 
-      - name: Run Trivy on dependencies
+      - name: Run Trivy on dependencies and save report
         run: |
-          trivy fs --scanners vuln,config .
+          trivy fs --scanners vuln,config -f json -o trivy-report.json .
 
-      - name: Run Gitleaks (Secrets Scan) через Docker
+      - name: Run Gitleaks (Secrets Scan) via Docker and save report
         run: |
-          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v || true
+          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=json --report-path=/src/gitleaks-report.json || true
 
+      - name: Upload reports as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            pip-audit-report.json
+            trivy-report.json
+            gitleaks-report.json
 
+      - name: Upload Bandit report to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: bandit-report.json
+
+      - name: Upload Trivy report to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-report.json
