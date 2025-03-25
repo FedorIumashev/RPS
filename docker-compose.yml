@@ -19,19 +19,19 @@ services:
 
   app:
     build:
-      context: .  # Путь к вашему проекту
+      context: .  
     container_name: devsecops-app
     environment:
-      - ENV=production  # Добавить переменные окружения, если нужно
+      - ENV=production  
     ports:
-      - "5000:5000"  # Прокси порта приложения
+      - "5000:5000" 
     volumes:
-      - .:/app  # Монтируем код
+      - .:/app 
     networks:
       - monitoring
     depends_on:
-      - postgres  # Зависит от базы данных PostgreSQL
-      - sonarqube  # Зависит от SonarQube
+      - postgres  
+      - sonarqube  
 
   sonarqube:
     image: sonarqube:lts
