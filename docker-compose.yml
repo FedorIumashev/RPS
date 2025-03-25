@@ -16,7 +16,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - monitoring
-    app:
+
+  app:
     build:
       context: .  # Путь к вашему проекту
     container_name: devsecops-app
@@ -65,4 +66,3 @@ volumes:
   postgres_data:
   sonarqube_data:
   grafana_data:
-
