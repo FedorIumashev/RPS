@@ -33,34 +33,41 @@ jobs:
       - name: Upgrade pip and install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
-          pip install --no-cache-dir bandit pip-audit trivy
+          pip install --no-cache-dir bandit pip-audit
 
-      # Шаг 4: Запуск Bandit для анализа кода (SAST)
+      # Шаг 4: Установить Trivy (обновленная версия установки)
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+          sudo mv ./bin/trivy /usr/local/bin/
+          trivy --version  # Проверим установку
+
+      # Шаг 5: Запуск Bandit для анализа кода (SAST)
       - name: Run Bandit (SAST)
         run: |
           bandit -r src/ -f json -o bandit-report.json || true
 
-      # Шаг 5: Запуск Pip Audit для проверки зависимостей
+      # Шаг 6: Запуск Pip Audit для проверки зависимостей
       - name: Run Pip Audit (Dependency Scan)
         run: |
           pip-audit --format=json --output=pip-audit-report.json || true
 
-      # Шаг 6: Запуск Trivy для проверки уязвимостей
+      # Шаг 7: Запуск Trivy для проверки уязвимостей
       - name: Run Trivy on dependencies
         run: |
           trivy fs --scanners vuln,config -f json -o trivy-report.json . || true
 
-      # Шаг 7: Запуск Gitleaks для поиска секретных ключей
+      # Шаг 8: Запуск Gitleaks для поиска секретных ключей
       - name: Run Gitleaks (Secrets Scan) via Docker
         run: |
           docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=json --report-path=/src/gitleaks-report.json || true
 
-      # Шаг 8: Проверка существования отчетов (для отладки)
+      # Шаг 9: Проверка существования отчетов (для отладки)
       - name: List generated files
         run: |
           ls -lah
 
-      # Шаг 9: Загружаем отчеты как артефакты
+      # Шаг 10: Загружаем отчеты как артефакты
       - name: Upload reports as artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -71,7 +78,7 @@ jobs:
             trivy-report.json
             gitleaks-report.json
 
-      # Шаг 10: Загружаем отчеты в GitHub Security Tab (SARIF формат)
+      # Шаг 11: Загружаем отчеты в GitHub Security Tab (SARIF формат)
       - name: Upload Bandit report to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v3
         with:
