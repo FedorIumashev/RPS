@@ -45,25 +45,25 @@ jobs:
       - name: Run Bandit (SAST)
         run: |
           bandit -r src/ -f json -o reports/bandit-report.json || true
-          jq '{ "version": "2.1.0", "runs": [.] }' reports/bandit-report.json > reports/bandit-report.sarif || true
+          jq 'del(.runs[].schemaVersion, .runs[].createdAt, .runs[].artifactName, .runs[].artifactType)' reports/bandit-report.json > reports/bandit-report.sarif || true
 
       # Run Pip Audit (Dependency Scan) - Generate JSON and convert to SARIF
       - name: Run Pip Audit (Dependency Scan)
         run: |
           pip-audit --format=json --output=reports/pip-audit-report.json || true
-          jq '{ "version": "2.1.0", "runs": [.] }' reports/pip-audit-report.json > reports/pip-audit-report.sarif || true
+          jq 'del(.runs[].schemaVersion, .runs[].createdAt, .runs[].artifactName, .runs[].artifactType)' reports/pip-audit-report.json > reports/pip-audit-report.sarif || true
 
       # Run Trivy (Vulnerability Scan) - Generate JSON and convert to SARIF
       - name: Run Trivy on dependencies
         run: |
           trivy fs --scanners vuln,config -f json -o reports/trivy-report.json . || true
-          jq '{ "version": "2.1.0", "runs": [.] }' reports/trivy-report.json > reports/trivy-report.sarif || true
+          jq 'del(.runs[].schemaVersion, .runs[].createdAt, .runs[].artifactName, .runs[].artifactType)' reports/trivy-report.json > reports/trivy-report.sarif || true
 
       # Run Gitleaks (Secrets Scan) via Docker - Generate JSON and convert to SARIF
       - name: Run Gitleaks (Secrets Scan) via Docker
         run: |
           docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=json --report-path=/src/reports/gitleaks-report.json || true
-          jq '{ "version": "2.1.0", "runs": [.] }' reports/gitleaks-report.json > reports/gitleaks-report.sarif || true
+          jq 'del(.runs[].schemaVersion, .runs[].createdAt, .runs[].artifactName, .runs[].artifactType)' reports/gitleaks-report.json > reports/gitleaks-report.sarif || true
 
       # List generated files (for debugging)
       - name: List generated files

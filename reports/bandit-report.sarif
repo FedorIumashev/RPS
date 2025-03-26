@@ -5,11 +5,29 @@
       "tool": {
         "driver": {
           "name": "Bandit",
-          "version": "1.7.4",
-          "informationUri": "https://bandit.readthedocs.io",
-          "rules": []
+          "version": "1.7.0"
         }
-      }
+      },
+      "results": [
+        {
+          "ruleId": "B101",
+          "message": {
+            "text": "Assert statement detected"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/example.py"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }
