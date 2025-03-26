@@ -20,15 +20,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Set up Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: 'pip'
 
+      # Upgrade pip and install dependencies
       - name: Upgrade pip and install dependencies
         run: |
           python -m pip install --upgrade pip setuptools
@@ -41,29 +44,25 @@ jobs:
           sudo mv ./bin/trivy /usr/local/bin/
           trivy --version
 
-      # Run Bandit (SAST) - Generate JSON and convert to SARIF
+      # Run Bandit (SAST)
       - name: Run Bandit (SAST)
         run: |
           bandit -r src/ -f json -o reports/bandit-report.json || true
-          jq 'del(.runs[].schemaVersion, .runs[].createdAt, .runs[].artifactName, .runs[].artifactType)' reports/bandit-report.json > reports/bandit-report.sarif || true
 
-      # Run Pip Audit (Dependency Scan) - Generate JSON and convert to SARIF
+      # Run Pip Audit (Dependency Scan)
       - name: Run Pip Audit (Dependency Scan)
         run: |
           pip-audit --format=json --output=reports/pip-audit-report.json || true
-          jq 'del(.runs[].schemaVersion, .runs[].createdAt, .runs[].artifactName, .runs[].artifactType)' reports/pip-audit-report.json > reports/pip-audit-report.sarif || true
 
-      # Run Trivy (Vulnerability Scan) - Generate JSON and convert to SARIF
+      # Run Trivy (Vulnerability Scan)
       - name: Run Trivy on dependencies
         run: |
-          trivy fs --scanners vuln,config -f json -o reports/trivy-report.json . || true
-          jq 'del(.runs[].schemaVersion, .runs[].createdAt, .runs[].artifactName, .runs[].artifactType)' reports/trivy-report.json > reports/trivy-report.sarif || true
+          trivy fs --scanners vuln,config -f sarif -o reports/trivy-report.sarif . || true
 
-      # Run Gitleaks (Secrets Scan) via Docker - Generate JSON and convert to SARIF
+      # Run Gitleaks (Secrets Scan) via Docker
       - name: Run Gitleaks (Secrets Scan) via Docker
         run: |
-          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=json --report-path=/src/reports/gitleaks-report.json || true
-          jq 'del(.runs[].schemaVersion, .runs[].createdAt, .runs[].artifactName, .runs[].artifactType)' reports/gitleaks-report.json > reports/gitleaks-report.sarif || true
+          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=sarif --report-path=/src/reports/gitleaks-report.sarif || true
 
       # List generated files (for debugging)
       - name: List generated files
@@ -76,10 +75,16 @@ jobs:
         with:
           name: security-reports
           path: |
-            reports/bandit-report.sarif
-            reports/pip-audit-report.sarif
+            reports/bandit-report.json
+            reports/pip-audit-report.json
             reports/trivy-report.sarif
             reports/gitleaks-report.sarif
+
+      # Upload Bandit report to GitHub Security Tab (uncomment if needed)
+      # - name: Upload Bandit report to GitHub Security Tab
+      #   uses: github/codeql-action/upload-sarif@v3
+      #   with:
+      #     sarif_file: reports/bandit-report.sarif
 
       # Upload Trivy report to GitHub Security Tab
       - name: Upload Trivy report to GitHub Security Tab
