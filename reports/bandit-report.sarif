@@ -1,0 +1,15 @@
+{
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Bandit",
+          "informationUri": "https://bandit.readthedocs.io",
+          "rules": [],
+          "version": "1.7.4"
+        }
+      },
+      "results": []
+    }
+  ]
+}
