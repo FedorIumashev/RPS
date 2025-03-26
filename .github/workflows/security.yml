@@ -83,11 +83,11 @@ jobs:
       #   with:
       #     sarif_file: reports/bandit-report.sarif
 
-      # Upload Pip Audit report to GitHub Security Tab
-      - name: Upload Pip Audit report to GitHub Security Tab
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: reports/pip-audit-report.sarif
+      # # Upload Pip Audit report to GitHub Security Tab
+      # - name: Upload Pip Audit report to GitHub Security Tab
+      #   uses: github/codeql-action/upload-sarif@v3
+      #   with:
+      #     sarif_file: reports/pip-audit-report.sarif
 
       # Upload Trivy report to GitHub Security Tab
       - name: Upload Trivy report to GitHub Security Tab
