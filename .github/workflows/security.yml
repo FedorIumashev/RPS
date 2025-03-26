@@ -41,25 +41,29 @@ jobs:
           sudo mv ./bin/trivy /usr/local/bin/
           trivy --version
 
-      # Run Bandit (SAST)
+      # Run Bandit (SAST) - Generate JSON and convert to SARIF
       - name: Run Bandit (SAST)
         run: |
-          bandit -r src/ -f sarif -o reports/bandit-report.sarif || true
+          bandit -r src/ -f json -o reports/bandit-report.json || true
+          jq '{ "version": "2.1.0", "runs": [.] }' reports/bandit-report.json > reports/bandit-report.sarif || true
 
-      # Run Pip Audit (Dependency Scan)
+      # Run Pip Audit (Dependency Scan) - Generate JSON and convert to SARIF
       - name: Run Pip Audit (Dependency Scan)
         run: |
-          pip-audit --format=sarif --output=reports/pip-audit-report.sarif || true
+          pip-audit --format=json --output=reports/pip-audit-report.json || true
+          jq '{ "version": "2.1.0", "runs": [.] }' reports/pip-audit-report.json > reports/pip-audit-report.sarif || true
 
-      # Run Trivy (Vulnerability Scan)
+      # Run Trivy (Vulnerability Scan) - Generate JSON and convert to SARIF
       - name: Run Trivy on dependencies
         run: |
-          trivy fs --scanners vuln,config -f sarif -o reports/trivy-report.sarif . || true
+          trivy fs --scanners vuln,config -f json -o reports/trivy-report.json . || true
+          jq '{ "version": "2.1.0", "runs": [.] }' reports/trivy-report.json > reports/trivy-report.sarif || true
 
-      # Run Gitleaks (Secrets Scan) via Docker
+      # Run Gitleaks (Secrets Scan) via Docker - Generate JSON and convert to SARIF
       - name: Run Gitleaks (Secrets Scan) via Docker
         run: |
-          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=sarif --report-path=/src/reports/gitleaks-report.sarif || true
+          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=json --report-path=/src/reports/gitleaks-report.json || true
+          jq '{ "version": "2.1.0", "runs": [.] }' reports/gitleaks-report.json > reports/gitleaks-report.sarif || true
 
       # List generated files (for debugging)
       - name: List generated files
@@ -76,18 +80,6 @@ jobs:
             reports/pip-audit-report.sarif
             reports/trivy-report.sarif
             reports/gitleaks-report.sarif
-
-      # # Upload Bandit report to GitHub Security Tab
-      # - name: Upload Bandit report to GitHub Security Tab
-      #   uses: github/codeql-action/upload-sarif@v3
-      #   with:
-      #     sarif_file: reports/bandit-report.sarif
-
-      # # Upload Pip Audit report to GitHub Security Tab
-      # - name: Upload Pip Audit report to GitHub Security Tab
-      #   uses: github/codeql-action/upload-sarif@v3
-      #   with:
-      #     sarif_file: reports/pip-audit-report.sarif
 
       # Upload Trivy report to GitHub Security Tab
       - name: Upload Trivy report to GitHub Security Tab
