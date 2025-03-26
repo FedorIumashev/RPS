@@ -1,0 +1,13 @@
+{
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "pip-audit",
+          "rules": []
+        }
+      },
+      "results": []
+    }
+  ]
+}
