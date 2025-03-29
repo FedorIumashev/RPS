@@ -3,29 +3,79 @@ package main
 import (
     "fmt"
     "log"
-    "net/http"
-    "flag"
+    "os"
+    "github.com/spf13/cobra"
     "github.com/FedorIumashev/RPS/src"  // Импортируем пакет src
 )
 
-func StartServer() {
-    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprintln(w, "Hello, DevSecOps!")
-    })
-    fmt.Println("Сервер работает на http://localhost:5000")
-    log.Fatal(http.ListenAndServe(":5000", nil))
-}
-
 func main() {
-    // Флаг для выбора директории
-    directory := flag.String("directory", ".", "Path to the directory to scan")
-    flag.Parse()
+    var rootCmd = &cobra.Command{Use: "rps"}
 
-    // Запуск сканирования
-    src.RunScan(*directory)
+    // Команда help
+    var helpCmd = &cobra.Command{
+        Use:   "help",
+        Short: "Показывает список доступных команд",
+        Run: func(cmd *cobra.Command, args []string) {
+            fmt.Println("Доступные команды:")
+            fmt.Println("rps help - Показывает список доступных команд")
+            fmt.Println("rps test <file> - Запускает тесты для указанного файла")
+            fmt.Println("rps test <directory> - Запускает тесты для всех файлов в директории")
+            fmt.Println("rps test-report <directory> - Генерирует отчет по результатам тестов")
+        },
+    }
+    rootCmd.AddCommand(helpCmd)
 
-    // Запуск веб-сервера
-    go StartServer()
+    // Команда test для файла
+    var testFileCmd = &cobra.Command{
+        Use:   "test",
+        Short: "Запускает тесты безопасности для файла",
+        Run: func(cmd *cobra.Command, args []string) {
+            if len(args) < 1 {
+                log.Fatal("Не указан файл для тестирования")
+            }
+            file := args[0]
+            fmt.Println("Запуск тестов для файла:", file)
+            issues := src.RunScan(file) // Получаем ошибки для файла
+            src.GenerateReport(issues) // Генерируем отчет
+        },
+    }
+    rootCmd.AddCommand(testFileCmd)
 
-    fmt.Println("Программа завершена.")
+    // Команда test для директории
+    var testDirectoryCmd = &cobra.Command{
+        Use:   "test",
+        Short: "Запускает тесты безопасности для директории",
+        Run: func(cmd *cobra.Command, args []string) {
+            if len(args) < 1 {
+                log.Fatal("Не указана директория для тестирования")
+            }
+            directory := args[0]
+            fmt.Println("Запуск тестов для директории:", directory)
+            issues := src.RunScan(directory) // Получаем ошибки для директории
+            src.GenerateReport(issues) // Генерируем отчет
+        },
+    }
+    rootCmd.AddCommand(testDirectoryCmd)
+
+    // Команда test-report для создания отчета
+    var testReportCmd = &cobra.Command{
+        Use:   "test-report",
+        Short: "Генерирует отчет по результатам тестов в TXT или CSV",
+        Run: func(cmd *cobra.Command, args []string) {
+            if len(args) < 1 {
+                log.Fatal("Не указана директория для отчетов")
+            }
+            directory := args[0]
+            fmt.Println("Генерация отчета для директории:", directory)
+            issues := src.RunScan(directory) // Получаем ошибки для директории
+            src.GenerateReport(issues) // Генерация отчета
+        },
+    }
+    rootCmd.AddCommand(testReportCmd)
+
+    // Запуск основной команды
+    if err := rootCmd.Execute(); err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
 }

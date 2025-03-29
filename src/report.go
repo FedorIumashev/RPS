@@ -1,12 +1,9 @@
+// src/report.go
+
 package src
 
-import (
-    "encoding/csv"
-    "fmt"
-    "os"
-)
+import "fmt"
 
-// Структура для хранения информации об ошибке
 type Issue struct {
     FilePath string
     Severity string
@@ -14,43 +11,18 @@ type Issue struct {
     Line     int
 }
 
-// GenerateReport создает отчет в CSV-формате
+// Генерация отчета на основе найденных проблем
 func GenerateReport(issues []Issue) {
     if len(issues) == 0 {
-        fmt.Println("Нет данных для отчета.")
+        fmt.Println("Ошибок не найдено!")
         return
     }
 
-    file, err := os.Create("report.csv")
-    if err != nil {
-        fmt.Printf("Ошибка создания файла: %v\n", err)
-        return
-    }
-    defer file.Close()
-
-    writer := csv.NewWriter(file)
-    defer writer.Flush()
-
-    // Заголовки
-    err = writer.Write([]string{"File", "Severity", "Message", "Line"})
-    if err != nil {
-        fmt.Printf("Ошибка записи заголовков в CSV: %v\n", err)
-        return
-    }
-
-    // Записываем каждую проблему
+    fmt.Println("Обнаружены проблемы:")
     for _, issue := range issues {
-        err = writer.Write([]string{
-            issue.FilePath,
-            issue.Severity,
-            issue.Message,
-            fmt.Sprintf("%d", issue.Line),
-        })
-        if err != nil {
-            fmt.Printf("Ошибка записи строки в CSV: %v\n", err)
-            return
-        }
+        fmt.Printf("Файл: %s\nСерьезность: %s\nСообщение: %s\nСтрока: %d\n\n", 
+                   issue.FilePath, issue.Severity, issue.Message, issue.Line)
     }
 
-    fmt.Println("Отчёт сохранён как report.csv")
+    // Если нужно, записывать отчет в файл или сохранять как CSV, TXT и т. д.
 }
