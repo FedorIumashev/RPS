@@ -1,0 +1,33 @@
+name: Build and Test Go Application
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout репозиторий
+        uses: actions/checkout@v4
+
+      - name: Установка Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.21
+
+      - name: Сборка проекта
+        run: go build -o rps ./cmd
+
+      - name: Запуск тестов
+        run: go test ./...
+
+      - name: Артефакт (если нужно)
+        uses: actions/upload-artifact@v4
+        with:
+          name: rps-binary
+          path: rps
