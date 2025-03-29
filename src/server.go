@@ -1,3 +1,5 @@
+// File: src/server.go
+// server.go - Простой HTTP сервер для демонстрации
 package src
 
 import (

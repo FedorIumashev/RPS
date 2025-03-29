@@ -1,4 +1,5 @@
-
+// File: src/testing_file.go
+// testing_file.go - Файл для тестирования безопасности кода
 package src
 
 import (

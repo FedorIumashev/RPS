@@ -1,4 +1,6 @@
-
+# This is a simple calculator module that provides basic arithmetic operations.
+# It includes functions for addition, subtraction, multiplication, and division.
+# Each function takes two arguments and returns the result of the operation.
 def add(a, b):
     return a + b
 
