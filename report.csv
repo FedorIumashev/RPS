@@ -1,0 +1,6 @@
+File Path, Severity, Message, Line
+"tests/__pycache__/__init__.cpython-312.pyc", "low", "Sample issue found in unknown file type", 10
+"tests/__pycache__/test_calculator.cpython-312-pytest-7.4.4.pyc", "low", "Sample issue found in unknown file type", 10
+"tests/__pycache__/test_sample.cpython-312-pytest-7.4.4.pyc", "low", "Sample issue found in unknown file type", 10
+"tests/fail.py", "high", "Potential issue: usage of print() found in Python", 9
+"tests/test.py", "high", "Potential issue: usage of print() found in Python", 14

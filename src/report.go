@@ -1,105 +1,146 @@
 package src
 
 import (
-	"fmt"
-	"os"
+    "fmt"
+    "os"
 	"strings"
 )
 
 // Структура Issue для хранения информации о найденных проблемах
 type Issue struct {
-	FilePath string
-	Severity string
-	Message  string
-	Line     int
+    FilePath string
+    Severity string
+    Message  string
+    Line     int
 }
 
 // Функция сканирования с учётом типа файла
+// Функция сканирования с учётом типа файла и правильного номера строки
 func RunScan(path string) []Issue {
-	var issues []Issue
+    var issues []Issue
 
-	// Чтение содержимого файла
-	content, err := os.ReadFile(path)
-	if err != nil {
-		fmt.Println("Ошибка при чтении файла:", err)
-		return issues
-	}
+    // Чтение содержимого файла
+    content, err := os.ReadFile(path)
+    if err != nil {
+        fmt.Println("Ошибка при чтении файла:", err)
+        return issues
+    }
 
-	// Примерная логика сканирования
-	var severity, message string
-	lines := strings.Split(string(content), "\n")
+    // Разбиваем содержимое файла на строки
+    lines := strings.Split(string(content), "\n")
 
-	// Проверяем тип файла и находим проблему в зависимости от содержимого
-	switch {
-	case strings.HasSuffix(path, ".py"):
-		severity = "high"
-		message = "Sample issue found in Python file"
-		// Примерная проверка для Python файлов
-		for i, line := range lines {
-			if strings.Contains(line, "print") {
-				issues = append(issues, Issue{
-					FilePath: path,
-					Severity: severity,
-					Message:  "Potential issue: usage of print() found in Python",
-					Line:     i + 1, // Номерация строк начинается с 1
-				})
-			}
-		}
+    // Примерная логика сканирования
+    var severity, message string
 
-	case strings.HasSuffix(path, ".go"):
-		severity = "medium"
-		message = "Sample issue found in Go file"
-		// Примерная проверка для Go файлов
-		for i, line := range lines {
-			if strings.Contains(line, "fmt.Println") {
-				issues = append(issues, Issue{
-					FilePath: path,
-					Severity: severity,
-					Message:  "Potential issue: fmt.Println() found in Go",
-					Line:     i + 1, // Номерация строк начинается с 1
-				})
-			}
-		}
+    // Проверяем тип файла и находим проблему в зависимости от содержимого
+    switch {
+    case path[len(path)-3:] == ".py":
+        severity = "high"
+        message = "Sample issue found in Python file"
+        // Примерная проверка для Python файлов
+        for i, line := range lines {
+            if strings.Contains(line, "print") {
+                message = "Potential issue: usage of print() found in Python"
+                issues = append(issues, Issue{
+                    FilePath: path,
+                    Severity: severity,
+                    Message:  message,
+                    Line:     i + 1, // Номер строки, где найдено совпадение
+                })
+            }
+        }
 
-	default:
-		severity = "low"
-		message = "Sample issue found in unknown file type"
-		issues = append(issues, Issue{
-			FilePath: path,
-			Severity: severity,
-			Message:  message,
-			Line:     10, // Пример строки, на которой обнаружена ошибка
-		})
-	}
+    case path[len(path)-3:] == ".go":
+        severity = "medium"
+        message = "Sample issue found in Go file"
+        // Примерная проверка для Go файлов
+        for i, line := range lines {
+            if strings.Contains(line, "fmt.Println") {
+                message = "Potential issue: fmt.Println() found in Go"
+                issues = append(issues, Issue{
+                    FilePath: path,
+                    Severity: severity,
+                    Message:  message,
+                    Line:     i + 1, // Номер строки, где найдено совпадение
+                })
+            }
+        }
 
-	fmt.Println("Сканирование завершено для:", path)
-	return issues
+    default:
+        severity = "low"
+        message = "Sample issue found in unknown file type"
+        issues = append(issues, Issue{
+            FilePath: path,
+            Severity: severity,
+            Message:  message,
+            Line:     10, // По умолчанию ставим строку 10 для неизвестных типов
+        })
+    }
+
+    fmt.Println("Сканирование завершено для:", path)
+    return issues
 }
 
-// Функция для генерации отчета
-func GenerateReport(issues []Issue, outputPath string) {
-	if len(issues) == 0 {
-		fmt.Println("Ошибок не найдено!")
-		return
-	}
 
-	// Создание файла отчета
-	file, err := os.Create(outputPath)
-	if err != nil {
-		fmt.Println("Ошибка при создании файла:", err)
-		return
-	}
-	defer file.Close()
+// Функция для генерации TXT отчета
+func GenerateReportTxt(issues []Issue, outputPath string) {
+    if len(issues) == 0 {
+        fmt.Println("Ошибок не найдено!")
+        return
+    }
 
-	// Запись информации в файл отчета
-	for _, issue := range issues {
-		reportLine := fmt.Sprintf("Файл: %s\nСерьезность: %s\nСообщение: %s\nСтрока: %d\n\n", issue.FilePath, issue.Severity, issue.Message, issue.Line)
-		_, err := file.WriteString(reportLine)
-		if err != nil {
-			fmt.Println("Ошибка при записи в файл отчета:", err)
-			return
-		}
-	}
+    // Создание файла отчета
+    file, err := os.Create(outputPath)
+    if err != nil {
+        fmt.Println("Ошибка при создании файла:", err)
+        return
+    }
+    defer file.Close()
 
-	fmt.Println("Отчет успешно сгенерирован:", outputPath)
+    // Запись информации в файл отчета
+    for _, issue := range issues {
+        reportLine := fmt.Sprintf("Файл: %s\nСерьезность: %s\nСообщение: %s\nСтрока: %d\n\n", issue.FilePath, issue.Severity, issue.Message, issue.Line)
+        _, err := file.WriteString(reportLine)
+        if err != nil {
+            fmt.Println("Ошибка при записи в файл отчета:", err)
+            return
+        }
+    }
+
+    fmt.Println("Отчет успешно сгенерирован:", outputPath)
+}
+
+// Функция для генерации CSV отчета
+func GenerateReportCsv(issues []Issue, outputPath string) {
+    if len(issues) == 0 {
+        fmt.Println("Ошибок не найдено!")
+        return
+    }
+
+    // Создание файла отчета
+    file, err := os.Create(outputPath)
+    if err != nil {
+        fmt.Println("Ошибка при создании файла:", err)
+        return
+    }
+    defer file.Close()
+
+    // Запись заголовка CSV файла
+    _, err = file.WriteString("File Path, Severity, Message, Line\n")
+    if err != nil {
+        fmt.Println("Ошибка при записи в файл отчета:", err)
+        return
+    }
+
+    // Запись каждой ошибки в CSV файл
+    for _, issue := range issues {
+        csvLine := fmt.Sprintf("\"%s\", \"%s\", \"%s\", %d\n", issue.FilePath, issue.Severity, issue.Message, issue.Line)
+        _, err := file.WriteString(csvLine)
+        if err != nil {
+            fmt.Println("Ошибка при записи в файл отчета:", err)
+            return
+        }
+    }
+
+    fmt.Println("Отчет успешно сгенерирован:", outputPath)
 }
