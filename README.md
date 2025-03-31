@@ -38,7 +38,7 @@ Welcome to my **RapidPurpleSec** repository! 🛡️
 2. Перейдите в папку с проектом:
 
     ```bash
-    cd RapidPurpleSec
+    cd devsecops-thesis
     ```
 
 3. Установите все зависимости:
