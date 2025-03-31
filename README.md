@@ -16,7 +16,7 @@ Welcome to my **RapidPurpleSec** repository! 🛡️
 
 ## 🛠️ Технологии
 
-- **Язык:** Python, Go
+- **Язык:** Python, Golang
 - **Инструменты:**
   - [GitHub Actions](https://github.com/features/actions) для автоматизации процессов CI/CD.
   - [Docker](https://www.docker.com/) для контейнеризации приложений и сервисов.
