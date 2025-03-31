@@ -1,0 +1,34 @@
+services:
+  bandit:
+    image: python:3.12
+    volumes:
+      - ./src:/src
+      - ./reports:/reports
+    working_dir: /src
+    command: ["sh", "-c", "pip install bandit && bandit -r /src -f json -o /reports/bandit-report.json"]
+
+  pip-audit:
+    image: python:3.12
+    volumes:
+      - ./src:/src
+      - ./reports:/reports
+      - ./requirements.txt:/src/requirements.txt  
+    working_dir: /src
+    command: ["sh", "-c", "pip install pip-audit && ls -lah /src && cat /src/requirements.txt && pip-audit --requirement /src/requirements.txt --format=json --output=/reports/pip-audit-report.json"]
+  
+  trivy:
+    image: aquasec/trivy:latest
+    volumes:
+      - ./src:/src
+      - ./reports:/reports
+    working_dir: /src
+    command: ["fs", "--scanners", "vuln,misconfig", "-f", "sarif", "-o", "/reports/trivy-report.sarif", "."]
+
+  gitleaks:
+    image: ghcr.io/gitleaks/gitleaks:v8.24.2
+    volumes:
+      - ./src:/src
+      - ./reports:/reports
+      - .git:/src/.git
+    working_dir: /src
+    command: ["detect", "--source", "/src", "-v", "--report-format=sarif", "--report-path=/reports/gitleaks-report.sarif"]

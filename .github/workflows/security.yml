@@ -1,0 +1,93 @@
+name: Security Checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  security-events: write
+  contents: read
+  pull-requests: read
+  actions: read
+  checks: write
+
+jobs:
+  security_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      # Upgrade pip and install dependencies
+      - name: Upgrade pip and install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools
+          pip install --no-cache-dir bandit pip-audit
+
+      # Install Trivy (Security Scanner)
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+          sudo mv ./bin/trivy /usr/local/bin/
+          trivy --version
+
+      # Run Bandit (Static Analysis for Python)
+      - name: Run Bandit (SAST)
+        run: |
+          bandit -r src/ -f json -o reports/bandit-report.json || true
+
+      # Run Pip Audit (Dependency Scan)
+      - name: Run Pip Audit (Dependency Scan)
+        run: |
+          pip-audit --format=json --output=reports/pip-audit-report.json || true
+
+      # Run Trivy on File System (Vulnerability Scan)
+      - name: Run Trivy on dependencies
+        run: |
+          trivy fs --scanners vuln,config -f sarif -o reports/trivy-report.sarif . || true
+
+      # Run Gitleaks (Secrets Scan) via Docker
+      - name: Run Gitleaks (Secrets Scan) via Docker
+        run: |
+          docker run --rm -v $(pwd):/src ghcr.io/gitleaks/gitleaks:v8.24.2 detect -s /src -v --report-format=sarif --report-path=/src/reports/gitleaks-report.sarif || true
+
+      # List generated files (for debugging)
+      - name: List generated files
+        run: |
+          ls -lah reports/
+
+      # Upload reports as artifacts
+      - name: Upload reports as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            reports/bandit-report.json
+            reports/pip-audit-report.json
+            reports/trivy-report.sarif
+            reports/gitleaks-report.sarif
+
+      # Upload Trivy report to GitHub Security Tab
+      - name: Upload Trivy report to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: reports/trivy-report.sarif
+
+      # Upload Gitleaks report to GitHub Security Tab
+      - name: Upload Gitleaks report to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: reports/gitleaks-report.sarif
