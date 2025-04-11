@@ -6,7 +6,6 @@ import (
 	"strings"
 )
 
-// Структура Issue для хранения информации о найденных проблемах
 type Issue struct {
     FilePath string
     Severity string
@@ -14,7 +13,6 @@ type Issue struct {
     Line     int
 }
 
-// Функция сканирования с учётом типа файла
 // Функция сканирования с учётом типа файла и правильного номера строки
 func RunScan(path string) []Issue {
     var issues []Issue
@@ -26,10 +24,8 @@ func RunScan(path string) []Issue {
         return issues
     }
 
-    // Разбиваем содержимое файла на строки
     lines := strings.Split(string(content), "\n")
 
-    // Примерная логика сканирования
     var severity, message string
 
     // Проверяем тип файла и находим проблему в зависимости от содержимого
@@ -73,7 +69,7 @@ func RunScan(path string) []Issue {
             FilePath: path,
             Severity: severity,
             Message:  message,
-            Line:     10, // По умолчанию ставим строку 10 для неизвестных типов
+            Line:     10, 
         })
     }
 

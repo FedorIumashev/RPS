@@ -1,0 +1,85 @@
+
+version: "3.9"
+services:
+
+  grafana:
+    image: grafana/grafana:8.5.3-ubuntu
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - grafana-configs:/etc/grafana
+
+  prometheus:
+    image: prom/prometheus:v2.36.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - prom-data:/prometheus
+      - prom-configs:/etc/prometheus
+
+  node-exporter:
+    image: prom/node-exporter:v1.3.1
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude'
+      - '^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)'
+
+  sonarqube:
+    image: sonarqube:9.9-community
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonarqube-data:/opt/sonarqube/data
+      - sonarqube-logs:/opt/sonarqube/logs
+
+  bandit:
+    image: python:3.12
+    volumes:
+      - ./src:/src
+      - ./reports:/reports
+    working_dir: /src
+    command: ["sh", "-c", "pip install bandit && bandit -r /src -f json -o /reports/bandit-report.json || echo 'Bandit Failed'"]
+
+  pip-audit:
+    image: python:3.12
+    volumes:
+      - ./src:/src
+      - ./reports:/reports
+      - ./requirements.txt:/src/requirements.txt
+    working_dir: /src
+    command: ["sh", "-c", "pip install pip-audit && pip-audit --requirement /src/requirements.txt --format=json --output=/reports/pip-audit-report.json || echo 'pip-audit failed'"]
+
+  trivy:
+    image: aquasec/trivy:latest
+    volumes:
+      - ./src:/src
+      - ./reports:/reports
+    working_dir: /src
+    command: ["sh", "-c", "trivy fs --scanners vuln,misconfig -f sarif -o /reports/trivy-report.sarif . || echo 'Trivy failed'"]
+
+  gitleaks:
+    image: ghcr.io/gitleaks/gitleaks:v8.24.2
+    volumes:
+      - ./src:/src
+      - ./reports:/reports
+      - .git:/src/.git
+    working_dir: /src
+    command: ["sh", "-c", "gitleaks detect --source /src -v --report-format=sarif --report-path=/reports/gitleaks-report.sarif || echo 'Gitleaks failed'"]
+
+volumes:
+  grafana-data:
+  grafana-configs:
+  prom-data:
+  prom-configs:
+  sonarqube-data:
+  sonarqube-logs:
