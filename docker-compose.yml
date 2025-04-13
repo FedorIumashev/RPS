@@ -1,85 +1,76 @@
 
-version: "3.9"
 services:
-
   grafana:
-    image: grafana/grafana:8.5.3-ubuntu
+    image: grafana/grafana:latest
     ports:
       - "3000:3000"
     volumes:
-      - grafana-data:/var/lib/grafana
-      - grafana-configs:/etc/grafana
+      - grafana-storage:/var/lib/grafana
+    depends_on:
+      - prometheus
 
   prometheus:
-    image: prom/prometheus:v2.36.0
+    image: prom/prometheus:latest
+    volumes:
+    - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
-    volumes:
-      - prom-data:/prometheus
-      - prom-configs:/etc/prometheus
 
   node-exporter:
-    image: prom/node-exporter:v1.3.1
+    image: prom/node-exporter:latest
     ports:
       - "9100:9100"
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude'
-      - '^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)'
 
   sonarqube:
-    image: sonarqube:9.9-community
+    image: sonarqube:community
     ports:
       - "9000:9000"
     environment:
       - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
-    volumes:
-      - sonarqube-data:/opt/sonarqube/data
-      - sonarqube-logs:/opt/sonarqube/logs
 
   bandit:
     image: python:3.12
+    container_name: bandit
     volumes:
-      - ./src:/src
-      - ./reports:/reports
+      - ./:/src
     working_dir: /src
-    command: ["sh", "-c", "pip install bandit && bandit -r /src -f json -o /reports/bandit-report.json || echo 'Bandit Failed'"]
+    command: >
+      bash -c "
+        pip install --no-cache-dir bandit &&
+        mkdir -p /src/reports &&
+        bandit -r src/ -f json -o /src/reports/bandit-report.json || true
+      "
 
   pip-audit:
     image: python:3.12
+    container_name: pip-audit
     volumes:
-      - ./src:/src
-      - ./reports:/reports
-      - ./requirements.txt:/src/requirements.txt
+      - ./:/src
     working_dir: /src
-    command: ["sh", "-c", "pip install pip-audit && pip-audit --requirement /src/requirements.txt --format=json --output=/reports/pip-audit-report.json || echo 'pip-audit failed'"]
+    command: >
+      bash -c "
+        pip install --no-cache-dir pip-audit &&
+        mkdir -p /src/reports &&
+        pip-audit --format=json --output=/src/reports/pip-audit-report.json || true
+      "
 
   trivy:
-    image: aquasec/trivy:latest
+    image: aquasec/trivy:0.49.1
+    container_name: trivy
     volumes:
-      - ./src:/src
-      - ./reports:/reports
+      - ./:/src
     working_dir: /src
-    command: ["sh", "-c", "trivy fs --scanners vuln,misconfig -f sarif -o /reports/trivy-report.sarif . || echo 'Trivy failed'"]
+    command: >
+      trivy fs --scans vuln,config -f sarif -o /src/reports/trivy-report.sarif /src || true
 
   gitleaks:
     image: ghcr.io/gitleaks/gitleaks:v8.24.2
+    container_name: gitleaks
     volumes:
-      - ./src:/src
-      - ./reports:/reports
-      - .git:/src/.git
+      - ./:/src
     working_dir: /src
-    command: ["sh", "-c", "gitleaks detect --source /src -v --report-format=sarif --report-path=/reports/gitleaks-report.sarif || echo 'Gitleaks failed'"]
-
+    command: >
+      detect --source=/src --report-format=sarif --report-path=/src/reports/gitleaks-report.sarif || true
+      
 volumes:
-  grafana-data:
-  grafana-configs:
-  prom-data:
-  prom-configs:
-  sonarqube-data:
-  sonarqube-logs:
+  grafana-storage:

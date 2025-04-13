@@ -1,46 +1,7 @@
 {
   "errors": [],
-  "generated_at": "2025-04-11T20:46:18Z",
+  "generated_at": "2025-04-12T12:48:26Z",
   "metrics": {
-    "/src/__init__.py": {
-      "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 0,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 0,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "/src/calculator.py": {
-      "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 0,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 10,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    "/src/fail.py": {
-      "CONFIDENCE.HIGH": 2,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 1,
-      "SEVERITY.LOW": 1,
-      "SEVERITY.MEDIUM": 0,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 3,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
     "_totals": {
       "CONFIDENCE.HIGH": 2,
       "CONFIDENCE.LOW": 0,
@@ -53,6 +14,45 @@
       "loc": 13,
       "nosec": 0,
       "skipped_tests": 0
+    },
+    "src/__init__.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 0,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/calculator.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 10,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/fail.py": {
+      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 1,
+      "SEVERITY.LOW": 1,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 3,
+      "nosec": 0,
+      "skipped_tests": 0
     }
   },
   "results": [
@@ -60,7 +60,7 @@
       "code": "2 \n3 import subprocess\n4 \n",
       "col_offset": 0,
       "end_col_offset": 17,
-      "filename": "/src/fail.py",
+      "filename": "src/fail.py",
       "issue_confidence": "HIGH",
       "issue_cwe": {
         "id": 78,
@@ -80,7 +80,7 @@
       "code": "6     # \u042d\u0442\u0430 \u043a\u043e\u043c\u0430\u043d\u0434\u0430 \u043c\u043e\u0436\u0435\u0442 \u0431\u044b\u0442\u044c \u0443\u044f\u0437\u0432\u0438\u043c\u043e\u0439 \u0434\u043b\u044f \u0430\u0442\u0430\u043a, \u0442\u0430\u043a \u043a\u0430\u043a \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u043f\u0435\u0440\u0435\u0434\u0430\u044e\u0442\u0441\u044f \u0432 \u043a\u043e\u043c\u0430\u043d\u0434\u043d\u0443\u044e \u0441\u0442\u0440\u043e\u043a\u0443 \u043d\u0430\u043f\u0440\u044f\u043c\u0443\u044e\n7     subprocess.run(f\"echo {input('Enter a command: ')}\", shell=True)\n",
       "col_offset": 4,
       "end_col_offset": 68,
-      "filename": "/src/fail.py",
+      "filename": "src/fail.py",
       "issue_confidence": "HIGH",
       "issue_cwe": {
         "id": 78,

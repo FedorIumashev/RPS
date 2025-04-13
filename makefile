@@ -1,7 +1,8 @@
 .PHONY: up down build report clean
 
+
 up:
-	docker compose up --build --abort-on-container-exit
+	docker compose up --build
 
 down:
 	docker compose down
@@ -15,3 +16,9 @@ report:
 clean:
 	rm -f final_report.xml
 	rm -rf reports/*
+
+logs:
+	docker compose logs --follow
+
+all: 
+	build up report clean
